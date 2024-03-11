@@ -1,5 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
-import * as THREE from "three";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/orbit';
+// import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Connects to data-controller="threejs"
 export default class extends Controller {
@@ -20,16 +22,34 @@ export default class extends Controller {
     document.body.appendChild(this.renderer.domElement);
 
     this.geometry = new THREE.BoxGeometry();
-    this.material = new THREE.MeshBasicMaterial({
+    this.material = new THREE.MeshStandardMaterial({
       color: 0x00ff00,
-      wireframe: true
+      wireframe: false
     });
 
     this.originCube = this.createCube(0,0,0);
+    this.offsetCube = this.createCube(3,3,-2);
 
-    this.scene.add(this.originCube);
+    this.pointLight = new THREE.PointLight(0xffffff);
+    this.pointLight.position.set(1,1,0);
+
+    this.lightHelper = new THREE.PointLightHelper(this.pointLight);
+    this.gridHelper = new THREE.GridHelper(100,100);
+
+    this.scene.add(
+      this.lightHelper,
+      this.gridHelper,
+      this.originCube,
+      this.offsetCube,
+      this.pointLight
+      );
+
+    const backgroundTexture = new THREE.TextureLoader().load("/assets/image.jpg");
+    this.scene.background = backgroundTexture;  
 
     this.camera.position.z = 5;
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     this.animate();
   }
@@ -39,6 +59,11 @@ export default class extends Controller {
 
     this.originCube.rotation.x += 0.01;
     this.originCube.rotation.y += 0.01;
+
+    this.offsetCube.rotation.x -= 0.01;
+    this.offsetCube.rotation.y -= 0.01;
+
+    this.controls.update();
 
     this.renderer.render(this.scene, this.camera);
   }
